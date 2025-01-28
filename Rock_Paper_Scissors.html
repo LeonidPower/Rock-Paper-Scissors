@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rock Paper Scissors - RNG Edition</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Arial', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem;
+            color: white;
+        }
+
+        h1 {
+            margin: 2rem 0;
+            font-size: 2.5rem;
+            text-shadow: 0 0 10px rgba(255,255,255,0.3);
+        }
+
+        .score-board {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 1rem 2rem;
+            border-radius: 10px;
+            margin-bottom: 2rem;
+            display: flex;
+            gap: 3rem;
+            font-size: 1.2rem;
+        }
+
+        .choices {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .choice-btn {
+            background: none;
+            border: 3px solid white;
+            padding: 1.5rem;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 3rem;
+            width: 100px;
+            height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .choice-btn:hover {
+            background: rgba(255,255,255,0.1);
+            transform: scale(1.1);
+            box-shadow: 0 0 15px rgba(255,255,255,0.3);
+        }
+
+        .result-container {
+            margin: 2rem 0;
+            text-align: center;
+            min-height: 100px;
+        }
+
+        .result-text {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: #ffd700;
+        }
+
+        .choices-made {
+            display: flex;
+            gap: 2rem;
+            justify-content: center;
+            font-size: 2rem;
+            margin-top: 1rem;
+        }
+
+        #reset-btn {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+        }
+
+        #reset-btn:hover {
+            transform: scale(1.05);
+            background: #c0392b;
+        }
+
+        @keyframes shake {
+            0% { transform: rotate(0deg); }
+            25% { transform: rotate(10deg); }
+            75% { transform: rotate(-10deg); }
+            100% { transform: rotate(0deg); }
+        }
+
+        .shake {
+            animation: shake 0.3s ease-in-out;
+        }
+    </style>
+</head>
+<body>
+    <h1>🤖 RNG RPS ✂️</h1>
+    
+    <div class="score-board">
+        <div>Player: <span id="player-score">0</span></div>
+        <div>Computer: <span id="computer-score">0</span></div>
+    </div>
+
+    <div class="choices">
+        <button class="choice-btn" data-choice="rock">🗿</button>
+        <button class="choice-btn" data-choice="paper">📜</button>
+        <button class="choice-btn" data-choice="scissors">✂️</button>
+    </div>
+
+    <div class="result-container">
+        <p class="result-text">Choose your weapon!</p>
+        <div class="choices-made">
+            <span id="player-choice">❔</span>
+            <span>vs</span>
+            <span id="computer-choice">❔</span>
+        </div>
+    </div>
+
+    <button id="reset-btn">Reset Score</button>
+
+    <script>
+        let playerScore = 0;
+        let computerScore = 0;
+        const choices = ['rock', 'paper', 'scissors'];
+
+        document.querySelectorAll('.choice-btn').forEach(button => {
+            button.addEventListener('click', playGame);
+        });
+
+        document.getElementById('reset-btn').addEventListener('click', resetScores);
+
+        function playGame(e) {
+            const playerChoice = e.target.dataset.choice;
+            const computerChoice = getComputerChoice();
+            
+            // Add shake animation
+            document.getElementById('computer-choice').classList.add('shake');
+            
+            setTimeout(() => {
+                document.getElementById('computer-choice').classList.remove('shake');
+                updateChoices(playerChoice, computerChoice);
+                const result = getResult(playerChoice, computerChoice);
+                updateScore(result);
+                updateResultText(result, playerChoice, computerChoice);
+            }, 500);
+        }
+
+        function getComputerChoice() {
+            return choices[Math.floor(Math.random() * 3)];
+        }
+
+        function updateChoices(player, computer) {
+            document.getElementById('player-choice').textContent = getEmoji(player);
+            document.getElementById('computer-choice').textContent = getEmoji(computer);
+        }
+
+        function getEmoji(choice) {
+            return {
+                rock: '🗿',
+                paper: '📜',
+                scissors: '✂️'
+            }[choice];
+        }
+
+        function getResult(player, computer) {
+            if (player === computer) return 'draw';
+            if (
+                (player === 'rock' && computer === 'scissors') ||
+                (player === 'paper' && computer === 'rock') ||
+                (player === 'scissors' && computer === 'paper')
+            ) return 'win';
+            return 'lose';
+        }
+
+        function updateScore(result) {
+            if (result === 'win') playerScore++;
+            if (result === 'lose') computerScore++;
+            document.getElementById('player-score').textContent = playerScore;
+            document.getElementById('computer-score').textContent = computerScore;
+            localStorage.setItem('rpsScores', JSON.stringify({ playerScore, computerScore }));
+        }
+
+        function updateResultText(result, player, computer) {
+            const resultText = document.querySelector('.result-text');
+            const messages = {
+                win: `You win! ${player} beats ${computer}`,
+                lose: `You lose! ${computer} beats ${player}`,
+                draw: "It's a draw!"
+            };
+            resultText.textContent = messages[result];
+            resultText.style.color = result === 'win' ? '#2ecc71' : 
+                                   result === 'lose' ? '#e74c3c' : '#f1c40f';
+        }
+
+        function resetScores() {
+            playerScore = 0;
+            computerScore = 0;
+            document.getElementById('player-score').textContent = '0';
+            document.getElementById('computer-score').textContent = '0';
+            localStorage.removeItem('rpsScores');
+            document.querySelector('.result-text').textContent = 'Choose your weapon!';
+            document.querySelector('.result-text').style.color = '#ffd700';
+            document.getElementById('player-choice').textContent = '❔';
+            document.getElementById('computer-choice').textContent = '❔';
+        }
+
+        // Load scores from localStorage
+        window.addEventListener('load', () => {
+            const savedScores = localStorage.getItem('rpsScores');
+            if (savedScores) {
+                const scores = JSON.parse(savedScores);
+                playerScore = scores.playerScore;
+                computerScore = scores.computerScore;
+                document.getElementById('player-score').textContent = playerScore;
+                document.getElementById('computer-score').textContent = computerScore;
+            }
+        });
+    </script>
+</body>
+</html>
